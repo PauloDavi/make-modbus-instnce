@@ -1,4 +1,7 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, remote } from 'electron'
+import ini from 'ini'
+import { DataProps } from '../src/pages/Form'
+import fs from 'fs'
 
 export const api = {
   /**
@@ -9,8 +12,12 @@ export const api = {
    * The function below can accessed using `window.Main.sendMessage`
    */
 
-  sendMessage: (message: string) => {
-    ipcRenderer.send('message', message)
+  saveIni({name, ...data}: DataProps) {
+    fs.writeFileSync(`./assets/configs/${name}.ini`, ini.stringify(data))
+  },
+
+  openIni() {
+    remote.dialog.showOpenDialog({ properties: ['openFile'] })
   },
 
   /**

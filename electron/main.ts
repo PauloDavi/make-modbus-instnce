@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 
-let mainWindow: BrowserWindow | null
+export let mainWindow: BrowserWindow | null
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
