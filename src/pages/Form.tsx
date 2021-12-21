@@ -1,9 +1,21 @@
 import { Button } from "@chakra-ui/button";
-import { Box, SimpleGrid, HStack } from "@chakra-ui/react";
-import { FormProvider, useForm } from "react-hook-form";
+import {
+  FormControl,
+  FormLabel,
+  Input,
+  Box,
+  SimpleGrid,
+  HStack,
+  VStack,
+  Flex
+} from "@chakra-ui/react";
+import { AddIcon } from "@chakra-ui/icons";
+import { FormProvider, useFieldArray, useForm } from "react-hook-form";
 import { InputRhf } from "../components/Input";
 import { NumberInputRhf } from "../components/NumberInput";
 import { SlugInputRhf } from "../components/SlugInput";
+import { useState } from "react";
+import { ModbusTable, Data } from "../components/ModbusTable";
 
 export interface DataProps {
   name: string;
@@ -14,17 +26,34 @@ export interface DataProps {
     influxTable: string;
     delay: string;
   }
+  modbus: Data[]
 }
 
 export function Form() {
   const methods = useForm();
+  const [modbusOperationsKey, setModbusOperationsKey] = useState('')
+  const [modbusOperationsValue, setModbusOperationsValue] = useState('')
 
-  const onSubmit = ({name, Configs: data}: DataProps) => {
-    window.Main.saveIni({name, Configs: {
-      ...data,
-      delay: `${data.delay}s`
-    }});
+  const onSubmit = ({name, Configs: data, modbus}: DataProps) => {
+    window.Main.saveIni({
+      name,
+      Configs: {
+        ...data,
+        delay: `${data.delay}s`
+      },
+      Modbus: modbus.reduce((obj, item) => {
+        return {
+          ...obj,
+          [item.key]: item.value,
+        };
+      }, {})
+    });
   };
+
+  const { fields, remove, append } = useFieldArray({
+    control: methods.control,
+    name: "modbus"
+  });
 
   return (
     <Box p={4}>
@@ -89,13 +118,59 @@ export function Form() {
             />
           </SimpleGrid>
 
-          <HStack spacing="4"  mt={4}>
-            <Button w="full"colorScheme="teal" isLoading={methods.formState.isSubmitting} type="submit">
-              Salvar
-            </Button>
+          <VStack spacing="4" mx="auto" maxWidth="xl">
+            <Flex direction={["column", "row"]} gap="4" mt={4} justifyContent="center" alignItem="center" width="full">
+              <FormControl flex={1}>
+                <FormLabel htmlFor="modbusOperationsKey">Chave da operação</FormLabel>
+                <Input
+                  name="modbusOperationsKey"
+                  value={modbusOperationsKey}
+                  onChange={(e) => setModbusOperationsKey(e.target.value)}
+                />
+              </FormControl>
 
+              <FormControl flex={1}>
+                <FormLabel htmlFor="modbusOperationsValue">Valor da operação (RPN)</FormLabel>
+                <Input
+                  name="modbusOperationsValue"
+                  value={modbusOperationsValue}
+                  onChange={(e) => setModbusOperationsValue(e.target.value)}
+                />
+              </FormControl>
+            </Flex>
+
+            <Button
+              leftIcon={<AddIcon />}
+              colorScheme="blue"
+              onClick={() => {
+                append({ key: modbusOperationsKey, value: modbusOperationsValue })
+                setModbusOperationsKey('')
+                setModbusOperationsValue('')
+              }}
+              isFullWidth
+              disabled={modbusOperationsKey === '' || modbusOperationsValue === ''}
+              type="button"
+            >
+              Adicionar Operação
+            </Button>
+          </VStack>
+
+
+          {
+            fields && fields.length > 0 && (
+              <Box boxShadow="lg" mt={4} borderRadius={8} borderColor="gray.300" borderWidth={1} mx="auto" maxWidth="xl">
+                <ModbusTable data={fields as any} remove={remove} />
+              </Box>
+            )
+          }
+
+          <HStack spacing="4" mt={4}>
             <Button onClick={window.Main.openIni} w="full" colorScheme="teal" type="button">
               Abrir
+            </Button>
+
+            <Button w="full"colorScheme="teal" isLoading={methods.formState.isSubmitting} type="submit">
+              Salvar
             </Button>
           </HStack>
         </form>

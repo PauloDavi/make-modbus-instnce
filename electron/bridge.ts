@@ -1,6 +1,5 @@
 import { contextBridge, ipcRenderer, remote } from 'electron'
 import ini from 'ini'
-import { DataProps } from '../src/pages/Form'
 import fs from 'fs'
 
 export const api = {
@@ -12,7 +11,7 @@ export const api = {
    * The function below can accessed using `window.Main.sendMessage`
    */
 
-  saveIni({name, ...data}: DataProps) {
+  saveIni({name, ...data}: Record<string, any> & { name: string }) {
     fs.writeFileSync(`./assets/configs/${name}.ini`, ini.stringify(data))
   },
 
